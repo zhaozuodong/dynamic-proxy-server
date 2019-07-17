@@ -18,6 +18,8 @@ public class ProxyThread extends Thread {
             InputStream inputStream = socket.getInputStream();
             // 1、先获取请求内容
 
+
+
             if (isProxy){
                 // 走第三方代理
                 Socket socket = new Socket("", 123);
