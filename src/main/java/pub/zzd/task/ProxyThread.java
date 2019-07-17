@@ -16,11 +16,11 @@ public class ProxyThread extends Thread {
 
     @Override
     public void run() {
+        Socket outbound = null;
         try {
-            String line="";
+            String method="";
             String host="";
             Integer port = 80;
-            Socket outbound=null;
             InputStream ips = socket.getInputStream();
             OutputStream os=null;
             boolean space;
@@ -38,16 +38,15 @@ public class ProxyThread extends Thread {
                         if (space){
                             continue;
                         }else {
-                            state = 1;}
-
+                            state = 1;
+                        }
                     case 1 :
                         if (space) {
                             state=2;
                             continue;
                         }
-                        line=line+(char)read;
+                        method=method+(char)read;
                         break;
-
                     case 2:
                         // 跳过多个空白字符
                         if (space) {
@@ -68,7 +67,6 @@ public class ProxyThread extends Thread {
                             if (n > -1){
                                 host=host.substring(n+2);
                             }
-
                             n=host.indexOf('/');
                             if (n > -1){
                                 host=host.substring(0,n);
@@ -79,24 +77,23 @@ public class ProxyThread extends Thread {
                                 port=Integer.parseInt(host.substring(n+1));
                                 host=host.substring(0,n);
                             }
-                            System.out.println(line + "  " +host + "  " +port);
-                            System.out.println("请求连接：" + host);
+                            System.out.println(method + "  " +host + "  " +port);
                             int retry = 3;
                             while (retry-- != 0) {
                                 try {
-                                    outbound=new Socket(host,port);
+                                    outbound = new Socket(host,port);
                                     break;
                                 } catch (Exception e) { }
                                 // 等待
                                 Thread.sleep(2*1000);
                             }
                             if (outbound==null){
-                                System.out.println("=================================outbound是空的，重新获取代理服务器");
+                                System.out.println("================================");
                                 break;
                             }
                             outbound.setSoTimeout(30*1000);
                             os=outbound.getOutputStream();
-                            os.write(line.getBytes());
+                            os.write(method.getBytes());
                             os.write(' ');
                             os.write(host0.getBytes());
                             os.write(' ');
@@ -112,7 +109,16 @@ public class ProxyThread extends Thread {
             e.printStackTrace();
         }
         finally {
+            try {
+                socket.close();
+            } catch (Exception e1) {
 
+            }
+            try {
+                outbound.close();
+            } catch (Exception e2) {
+
+            }
         }
         super.run();
     }
