@@ -26,8 +26,6 @@ public class ProxyHandleThread extends Thread {
 
     @Override
     public void run() {
-        System.out.println(Thread.currentThread().getName() + "第二层线程");
-
         try {
             while (true) {
                 BufferedInputStream bis = new BufferedInputStream(input);
@@ -36,7 +34,7 @@ public class ProxyHandleThread extends Thread {
                 //这里最好是字节转发，不要用上面的InputStreamReader，因为https传递的都是密文，那样会乱码，消息传到服务器端也会出错。
                 while((length=bis.read(buffer))!=-1) {
                     output.write(buffer, 0, length);
-                    length =-1;
+                    length = -1;
                 }
                 output.flush();
                 try {
@@ -47,20 +45,24 @@ public class ProxyHandleThread extends Thread {
                 }
             }
         } catch (SocketTimeoutException e) {
-            try {
-                input.close();
-                output.close();
-            } catch (IOException e1) {
-                e1.printStackTrace();
+            if (input != null){
+                try {
+                    input.close();
+                    output.close();
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
             }
         }catch (IOException e) {
-            System.out.println(e);
+
         }finally {
-            try {
-                input.close();
-                output.close();
-            } catch (IOException e) {
-                e.printStackTrace();
+            if (input != null){
+                try {
+                    input.close();
+                    output.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }

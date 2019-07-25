@@ -40,13 +40,13 @@ public class ProxyThread extends Thread {
                 this.DynamicHost = query[0].toString();
                 this.DynamicPost = Integer.valueOf(query[1].toString());
             }catch (Exception e){
+
             }
         }
     }
 
     @Override
     public void run() {
-        System.out.println(Thread.currentThread().getName() + "第一层线程");
         try {
             // 设置代理服务器与客户端的连接未活动超时时间
             socket.setSoTimeout(TIME_OUT);
