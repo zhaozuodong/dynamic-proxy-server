@@ -48,8 +48,8 @@ public class ProxyServer {
             logger.info("Web代理服务器 >> 正在启动...");
             if (isDynamicProxy){
                 logger.info("Web代理服务器 >> 启动动态代理");
-                Thread.sleep(1000);
             }
+            Thread.sleep(1000);
             logger.info("Web代理服务器 >> 服务已开启");
             logger.info("Web代理服务器 >> 服务器地址：" + InetAddress.getLocalHost().getHostAddress() + ":" + prot);
             while (true) {
