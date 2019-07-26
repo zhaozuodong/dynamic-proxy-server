@@ -7,6 +7,9 @@ import pub.zzd.utils.HostUtils;
 
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -23,6 +26,7 @@ public class ProxyServer {
     static Integer prot = 8988;
     static Pattern portPattern = Pattern.compile("(?<=--port=)\\d+");
     static Pattern proxyPattern = Pattern.compile("(?<=--proxy=)\\S+");
+
     public static void main(String[] args) {
         StringBuilder conf = new StringBuilder();
         for (String arg : args) {
@@ -43,6 +47,8 @@ public class ProxyServer {
             }
         }
         try {
+            // 线程池
+            ThreadPoolExecutor pool = new ThreadPoolExecutor(10,20,3, TimeUnit.SECONDS,new ArrayBlockingQueue(1000));
             // 在端口上创建一个Socket服务
             ServerSocket serverSocket = new ServerSocket(prot);
             logger.info("Web代理服务器 >> 正在启动...");
@@ -54,6 +60,7 @@ public class ProxyServer {
             logger.info("Web代理服务器 >> 服务器地址：" + HostUtils.getHostIp() + ":" + prot);
             while (true) {
                 Socket socket = serverSocket.accept();
+//                pool.execute(new ProxyThread(socket, isDynamicProxy));
                 new ProxyThread(socket, isDynamicProxy).start();
             }
         } catch (Exception e) {
