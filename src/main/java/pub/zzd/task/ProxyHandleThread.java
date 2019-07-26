@@ -28,13 +28,15 @@ public class ProxyHandleThread extends Thread {
         try {
             while (true) {
                 BufferedInputStream bis = new BufferedInputStream(input);
-                byte[] buffer = new byte[1024];
+                byte[] bytes = new byte[1024];
                 int length=-1;
-                while((length=bis.read(buffer))!=-1) {
-                    output.write(buffer, 0, length);
+                while((length=bis.read(bytes))!=-1) {
+                    System.out.println(new String(bytes,0,length) );
+                    output.write(bytes, 0, length);
                     length = -1;
                 }
                 output.flush();
+                System.out.println("=========================================================================================================");
                 break;
             }
         } catch (Exception e) {
