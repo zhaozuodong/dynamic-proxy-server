@@ -52,11 +52,11 @@ public class ProxyThread extends Thread {
             // 设置代理服务器与客户端的连接未活动超时时间
             socket.setSoTimeout(TIME_OUT);
             InputStream is = socket.getInputStream();
+            OutputStream os = socket.getOutputStream();
             if (isDynamicProxy){
                 Socket proxySocket = new Socket(DynamicHost,DynamicPort);
                 OutputStream proxyOs = proxySocket.getOutputStream();
                 InputStream proxyIs = proxySocket.getInputStream();
-                OutputStream os = socket.getOutputStream();
                 new ProxyHandleThread(is, proxyOs).start();
                 new ProxyHandleThread(proxyIs, os).start();
             }else {
@@ -64,7 +64,6 @@ public class ProxyThread extends Thread {
                 String tempHost="",host;
                 int port =80;
                 String type=null;
-                OutputStream os = socket.getOutputStream();
                 BufferedReader br = new BufferedReader(new InputStreamReader(is));
                 int temp=1;
                 StringBuilder sb =new StringBuilder();
