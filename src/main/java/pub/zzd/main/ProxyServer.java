@@ -1,5 +1,6 @@
 package pub.zzd.main;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pub.zzd.task.ProxyThread;
@@ -30,18 +31,18 @@ public class ProxyServer {
     public static void main(String[] args) {
         StringBuilder conf = new StringBuilder();
         for (String arg : args) {
-            if (arg != null && arg != ""){
+            if (StringUtils.isNotBlank(arg)){
                 conf.append(arg);
             }
         }
-        if (conf != null){
+        if (StringUtils.isNotBlank(conf)){
             String port = getRegex(conf.toString(), portPattern);
             String proxy = getRegex(conf.toString(), proxyPattern);
-            if (port != null){
+            if (StringUtils.isNotBlank(port)){
                 // 设置端口号 - 默认使用8988
                 prot = Integer.valueOf(port);
             }
-            if (proxy != null){
+            if (StringUtils.isNotBlank(proxy)){
                 // 设置是否使用动态代理 - 默认使用本地代理
                 isDynamicProxy = Boolean.valueOf(proxy);
             }

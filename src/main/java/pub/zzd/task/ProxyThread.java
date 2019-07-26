@@ -2,6 +2,7 @@ package pub.zzd.task;
 
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.handlers.ArrayHandler;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pub.zzd.utils.MyC3P0Utils;
@@ -92,7 +93,7 @@ public class ProxyThread extends Thread {
                     port = Integer.valueOf(tempHost.split(":")[1]);
                 }
                 host = tempHost.split(":")[0];
-                if(host!=null&&!host.equals("")) {
+                if(StringUtils.isNotBlank(host)) {
                     Socket proxySocket = new Socket(host,port);
                     //设置超时时间
                     proxySocket.setSoTimeout(TIME_OUT);
