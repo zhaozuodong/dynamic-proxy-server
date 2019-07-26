@@ -31,12 +31,10 @@ public class ProxyHandleThread extends Thread {
                 byte[] bytes = new byte[1024];
                 int length=-1;
                 while((length=bis.read(bytes))!=-1) {
-                    System.out.println(new String(bytes,0,length) );
                     output.write(bytes, 0, length);
                     length = -1;
                 }
                 output.flush();
-                System.out.println("=========================================================================================================");
                 break;
             }
         } catch (Exception e) {
