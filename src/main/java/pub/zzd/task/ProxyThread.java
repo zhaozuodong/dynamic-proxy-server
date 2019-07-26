@@ -23,7 +23,7 @@ public class ProxyThread extends Thread {
     public Socket socket;
     static Boolean isDynamicProxy = false;
     static String DynamicHost = "";
-    static Integer DynamicPost = 80;
+    static Integer DynamicPort = 80;
 
     public ProxyThread(Socket socket) {
         this.socket = socket;
@@ -38,7 +38,7 @@ public class ProxyThread extends Thread {
                 String sql = "select host,port from t_proxy order by rand() limit 1";
                 Object[] query = qr.query(sql, new ArrayHandler());
                 this.DynamicHost = query[0].toString();
-                this.DynamicPost = Integer.valueOf(query[1].toString());
+                this.DynamicPort = Integer.valueOf(query[1].toString());
             }catch (Exception e){
 
             }
@@ -52,13 +52,11 @@ public class ProxyThread extends Thread {
             socket.setSoTimeout(TIME_OUT);
             InputStream is = socket.getInputStream();
             if (isDynamicProxy){
-                Socket proxySocket = new Socket(DynamicHost,DynamicPost);
+                Socket proxySocket = new Socket(DynamicHost,DynamicPort);
                 OutputStream proxyOs = proxySocket.getOutputStream();
                 InputStream proxyIs = proxySocket.getInputStream();
                 OutputStream os = socket.getOutputStream();
-                //监听客户端传来消息并转发给动态代理服务器
                 new ProxyHandleThread(is, proxyOs).start();
-                //监听动态代理服务器传来消息并转发给客户端
                 new ProxyHandleThread(proxyIs, os).start();
             }else {
                 String line = "";
@@ -70,7 +68,6 @@ public class ProxyThread extends Thread {
                 int temp=1;
                 StringBuilder sb =new StringBuilder();
                 while((line = br.readLine())!=null) {
-                    //获取请求行中请求方法，下面会需要这个来判断是http还是https
                     if(temp==1) {
                         type = line.split(" ")[0];
                         if(type==null){
@@ -90,7 +87,6 @@ public class ProxyThread extends Thread {
                     sb.append(line + "\r\n");
                     line = null;
                 }
-                //不加上这行http请求则无法进行。这其实就是告诉服务端一个请求结束了
                 sb.append("\r\n");
                 if(tempHost.split(":").length>1) {
                     port = Integer.valueOf(tempHost.split(":")[1]);
@@ -98,11 +94,10 @@ public class ProxyThread extends Thread {
                 host = tempHost.split(":")[0];
                 if(host!=null&&!host.equals("")) {
                     Socket proxySocket = new Socket(host,port);
-                    //设置代理服务器与服务器端的连接未活动超时时间
+                    //设置超时时间
                     proxySocket.setSoTimeout(TIME_OUT);
                     OutputStream proxyOs = proxySocket.getOutputStream();
                     InputStream proxyIs = proxySocket.getInputStream();
-                    //https请求的话，告诉客户端连接已经建立（下面代码建立）
                     if(type.equalsIgnoreCase("connect")) {
                         os.write("HTTP/1.1 200 Connection Established\r\n\r\n".getBytes());
                         os.flush();
@@ -111,9 +106,7 @@ public class ProxyThread extends Thread {
                         proxyOs.write(sb.toString().getBytes("utf-8"));
                         proxyOs.flush();
                     }
-                    //监听客户端传来消息并转发给服务器
                     new ProxyHandleThread(is, proxyOs).start();
-                    //监听服务器传来消息并转发给客户端
                     new ProxyHandleThread(proxyIs, os).start();
                 }
             }

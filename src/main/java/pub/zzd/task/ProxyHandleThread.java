@@ -31,14 +31,12 @@ public class ProxyHandleThread extends Thread {
                 BufferedInputStream bis = new BufferedInputStream(input);
                 byte[] buffer = new byte[1024];
                 int length=-1;
-                //这里最好是字节转发，不要用上面的InputStreamReader，因为https传递的都是密文，那样会乱码，消息传到服务器端也会出错。
                 while((length=bis.read(buffer))!=-1) {
                     output.write(buffer, 0, length);
                     length = -1;
                 }
                 output.flush();
                 try {
-                    //线程休眠
                     Thread.sleep(10);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
