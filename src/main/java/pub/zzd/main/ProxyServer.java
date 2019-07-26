@@ -3,8 +3,8 @@ package pub.zzd.main;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pub.zzd.task.ProxyThread;
+import pub.zzd.utils.HostUtils;
 
-import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.regex.Matcher;
@@ -51,7 +51,7 @@ public class ProxyServer {
             }
             Thread.sleep(1000);
             logger.info("Web代理服务器 >> 服务已开启");
-            logger.info("Web代理服务器 >> 服务器地址：" + InetAddress.getLocalHost().getHostAddress() + ":" + prot);
+            logger.info("Web代理服务器 >> 服务器地址：" + HostUtils.getHostIp() + ":" + prot);
             while (true) {
                 Socket socket = serverSocket.accept();
                 new ProxyThread(socket, isDynamicProxy).start();
