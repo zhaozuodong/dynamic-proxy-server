@@ -7,7 +7,6 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.SocketTimeoutException;
 
 /**
  * @Description: 传递消息并转发线程
@@ -36,31 +35,21 @@ public class ProxyHandleThread extends Thread {
                     length = -1;
                 }
                 output.flush();
-                try {
-                    Thread.sleep(10);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+                break;
             }
-        } catch (SocketTimeoutException e) {
-            if (input != null){
-                try {
-                    input.close();
-                    output.close();
-                } catch (IOException e1) {
-                    e1.printStackTrace();
-                }
+        } catch (Exception e) {
+            try {
+                input.close();
+                output.close();
+            } catch (Exception e1) {
+                e1.printStackTrace();
             }
-        }catch (IOException e) {
-
         }finally {
-            if (input != null){
-                try {
-                    input.close();
-                    output.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+            try {
+                input.close();
+                output.close();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
     }

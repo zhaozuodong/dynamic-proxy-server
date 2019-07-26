@@ -7,11 +7,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pub.zzd.utils.MyC3P0Utils;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
+import java.io.*;
+import java.net.ConnectException;
 import java.net.Socket;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.Future;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @Description: 代理线程
@@ -20,15 +22,12 @@ import java.net.Socket;
  */
 public class ProxyThread extends Thread {
     private static Logger logger = LogManager.getLogger(ProxyThread.class);
-    public static final Integer TIME_OUT = 60000;
+    public static final Integer TIME_OUT = 30000;
     public Socket socket;
     static Boolean isDynamicProxy = false;
     static String DynamicHost = "";
     static Integer DynamicPort = 80;
-
-    public ProxyThread(Socket socket) {
-        this.socket = socket;
-    }
+    static ThreadPoolExecutor pool = new ThreadPoolExecutor(60,60,30, TimeUnit.SECONDS,new ArrayBlockingQueue(120));
 
     public ProxyThread(Socket socket, Boolean isDynamicProxy) {
         this.socket = socket;
@@ -41,25 +40,45 @@ public class ProxyThread extends Thread {
                 this.DynamicHost = query[0].toString();
                 this.DynamicPort = Integer.valueOf(query[1].toString());
             }catch (Exception e){
-
+                e.printStackTrace();
             }
         }
     }
 
     @Override
     public void run() {
-        try {
-            // 设置代理服务器与客户端的连接未活动超时时间
-            socket.setSoTimeout(TIME_OUT);
-            InputStream is = socket.getInputStream();
-            OutputStream os = socket.getOutputStream();
-            if (isDynamicProxy){
+        if (isDynamicProxy){
+            try {
+                // 获取客户端请求
+                InputStream is = socket.getInputStream();
+                OutputStream os = socket.getOutputStream();
                 Socket proxySocket = new Socket(DynamicHost,DynamicPort);
+                // 设置与代理服务器的超时时间
+                proxySocket.setSoTimeout(TIME_OUT);
                 OutputStream proxyOs = proxySocket.getOutputStream();
                 InputStream proxyIs = proxySocket.getInputStream();
-                new ProxyHandleThread(is, proxyOs).start();
-                new ProxyHandleThread(proxyIs, os).start();
-            }else {
+                Future<?> client = pool.submit(new ProxyHandleThread(is, proxyOs));
+                Future<?> server = pool.submit(new ProxyHandleThread(proxyIs, os));
+                client.get();
+                server.get();
+                proxySocket.close();
+                socket.close();
+//                new ProxyHandleThread(is, proxyOs).start();
+//                new ProxyHandleThread(proxyIs, os).start();
+            }catch (ConnectException e){
+                System.out.println("代理连接异常:" + e);
+                try {
+                    socket.close();
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }else {
+            try {
+                InputStream is = socket.getInputStream();
+                OutputStream os = socket.getOutputStream();
                 String line = "";
                 String tempHost="",host;
                 int port =80;
@@ -94,7 +113,7 @@ public class ProxyThread extends Thread {
                 host = tempHost.split(":")[0];
                 if(StringUtils.isNotBlank(host)) {
                     Socket proxySocket = new Socket(host,port);
-                    //设置超时时间
+                    // 设置与目标服务器的超时时间
                     proxySocket.setSoTimeout(TIME_OUT);
                     OutputStream proxyOs = proxySocket.getOutputStream();
                     InputStream proxyIs = proxySocket.getInputStream();
@@ -102,16 +121,29 @@ public class ProxyThread extends Thread {
                         os.write("HTTP/1.1 200 Connection Established\r\n\r\n".getBytes());
                         os.flush();
                     }else {
-                        //http请求则直接转发
+                        // HTTP的请求直接转发
                         proxyOs.write(sb.toString().getBytes("utf-8"));
                         proxyOs.flush();
                     }
-                    new ProxyHandleThread(is, proxyOs).start();
-                    new ProxyHandleThread(proxyIs, os).start();
+                    Future<?> client = pool.submit(new ProxyHandleThread(is, proxyOs));
+                    Future<?> server = pool.submit(new ProxyHandleThread(proxyIs, os));
+                    client.get();
+                    server.get();
+                    proxySocket.close();
+                    socket.close();
+//                    new ProxyHandleThread(is, proxyOs).start();
+//                    new ProxyHandleThread(proxyIs, os).start();
                 }
+            }catch (ConnectException e){
+                System.out.println("本地连接异常:" + e);
+                try {
+                    socket.close();
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+            }catch (Exception e){
+                e.printStackTrace();
             }
-        }catch (Exception e){
-
         }
     }
 }

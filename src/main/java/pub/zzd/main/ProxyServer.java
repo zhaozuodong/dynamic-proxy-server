@@ -35,9 +35,10 @@ public class ProxyServer {
                 conf.append(arg);
             }
         }
-        if (StringUtils.isNotBlank(conf)){
-            String port = getRegex(conf.toString(), portPattern);
-            String proxy = getRegex(conf.toString(), proxyPattern);
+        String s = conf.toString().toLowerCase();
+        if (StringUtils.isNotBlank(s)){
+            String port = getRegex(s, portPattern);
+            String proxy = getRegex(s, proxyPattern);
             if (StringUtils.isNotBlank(port)){
                 // 设置端口号 - 默认使用8988
                 prot = Integer.valueOf(port);
@@ -49,7 +50,7 @@ public class ProxyServer {
         }
         try {
             // 线程池
-            ThreadPoolExecutor pool = new ThreadPoolExecutor(10,20,3, TimeUnit.SECONDS,new ArrayBlockingQueue(1000));
+            ThreadPoolExecutor pool = new ThreadPoolExecutor(30,60,30, TimeUnit.SECONDS,new ArrayBlockingQueue(120));
             // 在端口上创建一个Socket服务
             ServerSocket serverSocket = new ServerSocket(prot);
             logger.info("Web代理服务器 >> 正在启动...");
@@ -61,8 +62,10 @@ public class ProxyServer {
             logger.info("Web代理服务器 >> 服务器地址：" + HostUtils.getHostIp() + ":" + prot);
             while (true) {
                 Socket socket = serverSocket.accept();
-//                pool.execute(new ProxyThread(socket, isDynamicProxy));
-                new ProxyThread(socket, isDynamicProxy).start();
+                // 设置与代理服务器的超时时间
+                socket.setSoTimeout(ProxyThread.TIME_OUT);
+                pool.execute(new ProxyThread(socket, isDynamicProxy));
+//                new ProxyThread(socket, isDynamicProxy).start();
             }
         } catch (Exception e) {
 
